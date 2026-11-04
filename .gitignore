@@ -1,0 +1,35 @@
+# Dependencies and build output
+node_modules/
+dist/
+*.js
+!ui/vite.config.js
+*.d.ts
+*.tsbuildinfo
+
+# AWS CDK
+cdk.out/
+cdk.context.json
+
+# Deployment outputs contain account-specific resource IDs
+outputs.json
+
+# Python
+__pycache__/
+*.pyc
+.venv/
+
+# OS and editor
+.DS_Store
+.idea/
+.vscode/
+
+# Secrets and credentials: never commit
+.env
+.env.*
+*.pem
+*.key
+*.p12
+*.pfx
+credentials
+.aws/
+*.tfvars

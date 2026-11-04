@@ -1,0 +1,14 @@
+THIRD-PARTY-LICENSES
+
+This file lists third-party material that is bundled in this repository. Dependencies that npm installs when you run `npm install` are not bundled here and carry their own licenses.
+
+1. data/pride-and-prejudice.txt
+   Pride and Prejudice by Jane Austen, Project Gutenberg eBook #1342.
+   Source: https://www.gutenberg.org/ebooks/1342
+   The text is in the public domain in the United States. The file includes the
+   Project Gutenberg License at its end, which applies to the Project Gutenberg
+   trademark and to redistribution of Project Gutenberg files.
+
+2. docs/architecture.png
+   Created for this sample using the AWS Architecture Icons.
+   https://aws.amazon.com/architecture/icons/

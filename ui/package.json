@@ -1,0 +1,29 @@
+{
+  "name": "literature-assistant-ui",
+  "version": "0.1.0",
+  "private": true,
+  "license": "MIT-0",
+  "type": "module",
+  "scripts": {
+    "build": "tsc --noEmit && vite build",
+    "start": "npm run build && tsx server.ts"
+  },
+  "dependencies": {
+    "@aws-sdk/client-bedrock-agentcore": "3.1160.0",
+    "@cloudscape-design/chat-components": "1.0.185",
+    "@cloudscape-design/components": "3.0.1407",
+    "@cloudscape-design/global-styles": "1.0.71",
+    "react": "19.3.1",
+    "react-dom": "19.3.1",
+    "react-markdown": "10.1.0"
+  },
+  "devDependencies": {
+    "@types/node": "22.20.5",
+    "@types/react": "19.3.0",
+    "@types/react-dom": "19.3.0",
+    "@vitejs/plugin-react": "6.1.2",
+    "tsx": "4.23.15",
+    "typescript": "5.9.3",
+    "vite": "8.3.5"
+  }
+}
