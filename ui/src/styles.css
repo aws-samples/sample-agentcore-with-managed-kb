@@ -1,0 +1,28 @@
+/* Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
+   SPDX-License-Identifier: MIT-0 */
+.conversation {
+  min-height: 420px;
+  max-height: 62vh;
+  overflow-y: auto;
+  padding-right: 4px;
+}
+
+.sources {
+  max-height: 72vh;
+  overflow-y: auto;
+}
+
+.answer p { margin: 0 0 8px; }
+.answer p:last-child { margin-bottom: 0; }
+.answer ul, .answer ol { margin: 4px 0 8px; padding-left: 20px; }
+.answer blockquote {
+  margin: 8px 0;
+  padding: 2px 12px;
+  border-left: 3px solid #7d8998;
+  color: #414d5c;
+}
+
+.passage { white-space: pre-line; }
+
+.center { display: flex; justify-content: center; }
+.center > * { align-items: center; }
