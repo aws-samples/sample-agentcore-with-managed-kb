@@ -3,7 +3,7 @@
 """Ask the deployed agent a question and print the streamed answer and tool calls.
 
 Usage: python3 scripts/ask_agent.py "<question>"
-Reads HarnessArn from outputs.json written by `cdk deploy --outputs-file outputs.json`.
+Reads HarnessArn from outputs.json written by `npx cdk deploy --outputs-file outputs.json`.
 """
 import json
 import sys

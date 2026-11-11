@@ -8,7 +8,7 @@ const app = new cdk.App();
 
 new GenAiAppStack(app, 'BedrockGenAiAppStack', {
   // The model is a context value so it can change without touching code:
-  //   cdk deploy -c modelId=us.anthropic.claude-haiku-4-5-20251001-v1:0
+  //   npx cdk deploy -c modelId=us.anthropic.claude-haiku-4-5-20251001-v1:0
   modelId: app.node.tryGetContext('modelId'),
   env: {
     account: process.env.CDK_DEFAULT_ACCOUNT,

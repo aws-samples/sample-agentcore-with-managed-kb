@@ -180,10 +180,16 @@ export class GenAiAppStack extends cdk.Stack {
     // An inference profile ID such as us.amazon.nova-2-lite-v1:0 maps to the base model amazon.nova-2-lite-v1:0.
     const baseModelId = props.modelId.replace(/^(us|eu|apac|jp|au|us-gov|global)\./, '');
 
+    // The harness name is used to scope the agent role to this one agent.
+    const harnessName = 'LiteratureAgent';
+
     // The agent runs as this role.
     const harnessRole = new iam.Role(this, 'AgentRole', {
       assumedBy: new iam.ServicePrincipal('bedrock-agentcore.amazonaws.com', {
-        conditions: { StringEquals: { 'aws:SourceAccount': account } },
+        conditions: {
+          StringEquals: { 'aws:SourceAccount': account },
+          ArnLike: { 'aws:SourceArn': `arn:${partition}:bedrock-agentcore:${region}:${account}:*` },
+        },
       }),
     });
     harnessRole.addToPolicy(new iam.PolicyStatement({
@@ -207,7 +213,7 @@ export class GenAiAppStack extends cdk.Stack {
     harnessRole.addToPolicy(new iam.PolicyStatement({
       sid: 'Logs',
       actions: ['logs:CreateLogGroup', 'logs:DescribeLogStreams', 'logs:CreateLogStream', 'logs:PutLogEvents'],
-      resources: [`arn:${partition}:logs:${region}:${account}:log-group:/aws/bedrock-agentcore/runtimes/*`],
+      resources: [`arn:${partition}:logs:${region}:${account}:log-group:/aws/bedrock-agentcore/runtimes/harness_${harnessName}-*`],
     }));
     harnessRole.addToPolicy(new iam.PolicyStatement({
       sid: 'Observability',
@@ -226,13 +232,13 @@ export class GenAiAppStack extends cdk.Stack {
       actions: ['bedrock-agentcore:GetWorkloadAccessToken', 'bedrock-agentcore:GetWorkloadAccessTokenForJWT'],
       resources: [
         `arn:${partition}:bedrock-agentcore:${region}:${account}:workload-identity-directory/default`,
-        `arn:${partition}:bedrock-agentcore:${region}:${account}:workload-identity-directory/default/workload-identity/*`,
+        `arn:${partition}:bedrock-agentcore:${region}:${account}:workload-identity-directory/default/workload-identity/harness_${harnessName}-*`,
       ],
     }));
 
     // The agent: declare the model, instructions and tools. AgentCore runs the loop.
     const harness = new agentcore.CfnHarness(this, 'LiteratureAgent', {
-      harnessName: 'LiteratureAgent',
+      harnessName,
       executionRoleArn: harnessRole.roleArn,
       model: { bedrockModelConfig: { modelId: props.modelId } },
       systemPrompt: [{
