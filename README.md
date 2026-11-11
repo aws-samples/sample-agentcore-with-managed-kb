@@ -7,7 +7,7 @@ This repository contains the sample code for the AWS blog post *Build generative
 
 The sample answers questions about *Pride and Prejudice* from Project Gutenberg. You can replace the book with your own documents.
 
-**This is sample code for learning and experimentation. It is not production-ready.** It favors simplicity over hardening: for example, the bucket does not have server access logging, encryption uses AWS managed keys instead of customer managed keys, and the agent runs on the public network. Review the [Security](#security) section and your own requirements before you adapt it for production.
+**This is sample code for learning and experimentation. It is not production-ready.** It favors simplicity over hardening: for example, the bucket does not have server access logging, encryption uses Amazon S3 managed keys (SSE-S3) instead of customer managed keys, and the agent runs on the public network. Review the [Security](#security) section and your own requirements before you adapt it for production.
 
 **Cost.** The stack creates billable resources. A managed knowledge base is billed for storage and retrieval calls, the model is billed per token, and the AgentCore harness has no separate charge but you pay for the AgentCore capabilities it uses. See [Amazon Bedrock pricing](https://aws.amazon.com/bedrock/pricing/) and [Amazon Bedrock AgentCore pricing](https://aws.amazon.com/bedrock/agentcore/pricing/). Delete the stack when you finish (see [Clean up](#clean-up)).
 
@@ -19,7 +19,7 @@ The sample answers questions about *Pride and Prejudice* from Project Gutenberg.
 - Node.js 20 or later and the AWS CDK CLI. Run `npx cdk bootstrap` once for your account and Region.
 - Python 3 with a recent version of `boto3` (tested with 1.43) for the test script.
 - Access to the model you plan to use in Amazon Bedrock. The default is Amazon Nova 2 Lite.
-- A Region where Amazon Bedrock Managed Knowledge Bases, Amazon Bedrock AgentCore and your model are available. See [Supported AWS Regions for AgentCore](https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/agentcore-regions.html) and [model support by Region](https://docs.aws.amazon.com/bedrock/latest/userguide/models-regions.html).
+- A Region where Amazon Bedrock Managed Knowledge Bases, Amazon Bedrock AgentCore and your model are available. See [Supported AWS Regions for managed knowledge bases](https://docs.aws.amazon.com/bedrock/latest/userguide/kb-managed-regions.html), [Supported AWS Regions for AgentCore](https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/agentcore-regions.html) and [Regional availability by models](https://docs.aws.amazon.com/bedrock/latest/userguide/models-region-compatibility.html). AWS GovCloud (US-West) is not supported for this sample, because it doesn't offer the service-managed embedding model or the AgentCore Gateway target for managed knowledge bases.
 
 The stack uses only constructs from `aws-cdk-lib` (pinned to 2.275.0).
 

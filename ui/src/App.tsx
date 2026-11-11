@@ -203,7 +203,10 @@ export default function App() {
                               {t.status === 'error' ? (
                                 <StatusIndicator type="error">{t.error}</StatusIndicator>
                               ) : t.answer ? (
-                                <div className="answer"><ReactMarkdown>{t.answer}</ReactMarkdown></div>
+                                <div className="answer">
+                                  {/* No images: a document could carry a remote image URL that leaks data. */}
+                                  <ReactMarkdown disallowedElements={['img']}>{t.answer}</ReactMarkdown>
+                                </div>
                               ) : (
                                 <Box color="text-status-inactive">
                                   {t.searches.length ? 'Reading the passages' : 'Searching the books'}
