@@ -19,12 +19,16 @@ import type { AgentEvent, AppInfo, Passage } from './shared';
 const HOST = '127.0.0.1';
 const PORT = Number(process.env.PORT ?? 8790);
 const MAX_QUESTION_CHARS = 2000;
+const MAX_BODY_BYTES = 10_000;
+// Only requests addressed to this server are accepted. Checking Host blocks DNS rebinding,
+// and checking Origin and Content-Type blocks cross-site requests from other open pages.
+const ALLOWED_HOSTS = new Set([`127.0.0.1:${PORT}`, `localhost:${PORT}`]);
 const here = fileURLToPath(new URL('.', import.meta.url));
 const distDir = join(here, 'dist');
 
 const outputsPath = join(here, '..', 'outputs.json');
 if (!existsSync(outputsPath)) {
-  console.error('outputs.json not found. Deploy first with: cdk deploy --outputs-file outputs.json');
+  console.error('outputs.json not found. Deploy first with: npx cdk deploy --outputs-file outputs.json');
   process.exit(1);
 }
 const outputs = JSON.parse(readFileSync(outputsPath, 'utf8')).BedrockGenAiAppStack;
@@ -119,14 +123,29 @@ async function ask(question: string, res: ServerResponse): Promise<void> {
 
 function readBody(req: IncomingMessage): Promise<string> {
   return new Promise((resolve, reject) => {
-    let body = '';
-    req.on('data', (chunk) => {
-      body += chunk;
-      if (body.length > 10_000) reject(new Error('Request too large'));
+    const chunks: Buffer[] = [];
+    let bytes = 0;
+    req.on('data', (chunk: Buffer) => {
+      bytes += chunk.length;
+      if (bytes > MAX_BODY_BYTES) {
+        reject(new Error('Request too large'));
+        req.destroy();
+        return;
+      }
+      chunks.push(chunk);
     });
-    req.on('end', () => resolve(body));
+    req.on('end', () => resolve(Buffer.concat(chunks).toString('utf8')));
     req.on('error', reject);
   });
+}
+
+function isAllowedOrigin(origin: string | undefined): boolean {
+  if (!origin) return true; // same-origin GETs and non-browser clients send no Origin
+  try {
+    return ALLOWED_HOSTS.has(new URL(origin).host);
+  } catch {
+    return false;
+  }
 }
 
 const contentTypes: Record<string, string> = {
@@ -135,6 +154,10 @@ const contentTypes: Record<string, string> = {
 };
 
 const server = createServer(async (req, res) => {
+  if (!ALLOWED_HOSTS.has(req.headers.host ?? '') || !isAllowedOrigin(req.headers.origin)) {
+    res.writeHead(403).end('Forbidden');
+    return;
+  }
   const url = new URL(req.url ?? '/', `http://${HOST}`);
 
   if (url.pathname === '/api/info' && req.method === 'GET') {
@@ -144,6 +167,14 @@ const server = createServer(async (req, res) => {
   }
 
   if (url.pathname === '/api/ask' && req.method === 'POST') {
+    if (!String(req.headers['content-type'] ?? '').toLowerCase().startsWith('application/json')) {
+      res.writeHead(415).end('Content-Type must be application/json');
+      return;
+    }
+    if (Number(req.headers['content-length'] ?? 0) > MAX_BODY_BYTES) {
+      res.writeHead(413).end('Request too large');
+      return;
+    }
     let question = '';
     try {
       question = String(JSON.parse(await readBody(req)).question ?? '').trim();
@@ -159,7 +190,9 @@ const server = createServer(async (req, res) => {
     try {
       await ask(question, res);
     } catch (err) {
-      send(res, { type: 'error', message: err instanceof Error ? err.message : String(err) });
+      // Log the full error locally, but send only a generic message to the browser.
+      console.error(err);
+      send(res, { type: 'error', message: 'The agent call failed. See the server console for details.' });
     }
     res.end();
     return;

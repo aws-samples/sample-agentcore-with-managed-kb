@@ -16,7 +16,7 @@ The sample answers questions about *Pride and Prejudice* from Project Gutenberg.
 ## Prerequisites
 
 - An AWS account and an AWS Identity and Access Management (IAM) principal that can create the resources in the stack.
-- Node.js 20 or later and the AWS CDK CLI. Run `cdk bootstrap` once for your account and Region.
+- Node.js 20 or later and the AWS CDK CLI. Run `npx cdk bootstrap` once for your account and Region.
 - Python 3 with a recent version of `boto3` (tested with 1.43) for the test script.
 - Access to the model you plan to use in Amazon Bedrock. The default is Amazon Nova 2 Lite.
 - A Region where Amazon Bedrock Managed Knowledge Bases, Amazon Bedrock AgentCore and your model are available. See [Supported AWS Regions for AgentCore](https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/agentcore-regions.html) and [model support by Region](https://docs.aws.amazon.com/bedrock/latest/userguide/models-regions.html).
