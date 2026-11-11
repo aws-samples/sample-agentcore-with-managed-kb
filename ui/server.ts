@@ -9,9 +9,9 @@
  * The browser never holds AWS credentials.
  */
 import { randomUUID } from 'node:crypto';
-import { readFileSync, existsSync } from 'node:fs';
+import { readFileSync, existsSync, statSync } from 'node:fs';
 import { createServer, type IncomingMessage, type ServerResponse } from 'node:http';
-import { extname, join, normalize } from 'node:path';
+import { extname, join, normalize, sep } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { BedrockAgentCoreClient, InvokeHarnessCommand } from '@aws-sdk/client-bedrock-agentcore';
 import type { AgentEvent, AppInfo, Passage } from './shared';
@@ -23,6 +23,16 @@ const MAX_BODY_BYTES = 10_000;
 // Only requests addressed to this server are accepted. Checking Host blocks DNS rebinding,
 // and checking Origin and Content-Type blocks cross-site requests from other open pages.
 const ALLOWED_HOSTS = new Set([`127.0.0.1:${PORT}`, `localhost:${PORT}`]);
+const CSP = "default-src 'self'; img-src 'self' data:; font-src 'self' data:; connect-src 'self'; "
+  + "object-src 'none'; base-uri 'none'; frame-ancestors 'none'";
+
+function isFile(path: string): boolean {
+  try {
+    return statSync(path).isFile();
+  } catch {
+    return false;
+  }
+}
 const here = fileURLToPath(new URL('.', import.meta.url));
 const distDir = join(here, 'dist');
 
@@ -154,6 +164,9 @@ const contentTypes: Record<string, string> = {
 };
 
 const server = createServer(async (req, res) => {
+  // Same-origin only: no remote images, scripts or connections, and no framing.
+  res.setHeader('Content-Security-Policy', CSP);
+  res.setHeader('X-Content-Type-Options', 'nosniff');
   if (!ALLOWED_HOSTS.has(req.headers.host ?? '') || !isAllowedOrigin(req.headers.origin)) {
     res.writeHead(403).end('Forbidden');
     return;
@@ -198,15 +211,24 @@ const server = createServer(async (req, res) => {
     return;
   }
 
-  // Static files from the built page. Fall back to index.html.
+  // Static files from the built page. Fall back to index.html for anything that isn't a file
+  // inside dist/, including directories, so a request like /assets can't stop the server.
   const requested = normalize(join(distDir, url.pathname === '/' ? 'index.html' : url.pathname));
-  const file = requested.startsWith(distDir) && existsSync(requested) ? requested : join(distDir, 'index.html');
-  if (!existsSync(file)) {
+  const index = join(distDir, 'index.html');
+  const file = requested.startsWith(distDir + sep) && isFile(requested) ? requested : index;
+  if (!isFile(file)) {
     res.writeHead(500).end('Page not built. Run: npm start');
     return;
   }
+  let body: Buffer;
+  try {
+    body = readFileSync(file);
+  } catch {
+    res.writeHead(500).end('Could not read file');
+    return;
+  }
   res.writeHead(200, { 'Content-Type': contentTypes[extname(file)] ?? 'application/octet-stream' });
-  res.end(readFileSync(file));
+  res.end(body);
 });
 
 server.listen(PORT, HOST, () => {
